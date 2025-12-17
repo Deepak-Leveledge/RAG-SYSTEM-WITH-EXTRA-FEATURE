@@ -1,0 +1,13 @@
+python-dotenv
+langchain
+pinecone
+sentence-transformers
+python-docx
+pypdf 
+python-multipart
+uvicorn 
+fastapi
+requests
+langchain-google-genai
+google-generativeai
+streamlit 
