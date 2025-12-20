@@ -5,6 +5,7 @@ from typing import List, Dict
 
 from services.embeddings import embedding_query
 from services.vector_store import query_chunks
+from services.chat_memory import get_history, add_user_and_assistant_message
 
 load_dotenv()
 
@@ -14,11 +15,20 @@ genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 model = genai.GenerativeModel("gemini-3-pro-preview")
 
 
-def build_prompt(context_chunks: list[Dict], question: str) -> str:
+def build_prompt(context_chunks: list[Dict], question: str,history: list[dict]) -> str:
      """
-    Build prompt using retrieved context text only.
-    Metadata (source/page) is NOT injected into the prompt.
+    Build prompt using:
+    - previous conversation (light memory)
+    - retrieved context
+    - current question
     """
+     
+
+     # ---- format history ----
+     history_text = ""
+     for h in history:
+        role = "User" if h["role"] == "user" else "AI"
+        history_text += f"{role}: {h['content']}\n"
      
      
      context_texts = [c["text"].replace("\n", " ").strip() for c in context_chunks]
@@ -27,9 +37,14 @@ def build_prompt(context_chunks: list[Dict], question: str) -> str:
      prompt = f"""
            You are a helpful AI assistant.
 
+
+Previous conversation:
+{history_text if history_text else "None"}
+
 Use the context below to answer the question.
 You may infer the answer by combining information from multiple parts of the context.
 If the answer cannot be reasonably inferred, say "I don't know".
+
 
 Context:
 {context}
@@ -68,6 +83,8 @@ def ask_rag(question: str, session_id: str) -> Dict:
       "sources": list[str]
     }
     """
+      # 0 Get chat history
+    history = get_history(session_id)
 
     # 1. Embed the question
     query_vector = embedding_query(question)
@@ -80,23 +97,26 @@ def ask_rag(question: str, session_id: str) -> Dict:
     )
 
     if not chunks:
-        return {
-            "answer": "I don't know based on the provided documents.",
-            "sources": []
-        }
+        answer = "I don't know based on the provided documents."
+        add_user_and_assistant_message(session_id, question, answer)
+        return {"answer": answer, "sources": []}
 
     # 3. Build prompt
-    prompt = build_prompt(chunks, question)
+    prompt = build_prompt(chunks, question, history)
 
     # 4. Call Gemini
     response = model.generate_content(prompt)
 
     answer = response.text.strip()
+    add_user_and_assistant_message(session_id, question, answer)
 
     # 5. Extract sources
     sources = extract_sources(chunks)
     print("answer:-",answer)
-    print("sources:-",sources)
+    # print("sources:-",sources)
+    # print("prompt:-",prompt)
+    print("history:-",history)
+    print("session_id:-",session_id)
 
 
 
