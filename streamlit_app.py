@@ -80,8 +80,14 @@ else:
                 )
 
                 if response.status_code == 200:
-                    answer = response.json()["answer"]
+                    data = response.json()
+
                     st.markdown("### 🤖 Answer")
-                    st.write(answer)
+                    st.write(data["answer"])
+                      
+                    if data.get("sources"):
+                       st.markdown("### 📄 Sources")
+                    for src in data["sources"]:
+                       st.write("•", src)
                 else:
                     st.error("Error getting answer")

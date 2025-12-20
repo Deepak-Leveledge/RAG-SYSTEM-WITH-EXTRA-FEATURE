@@ -63,22 +63,23 @@ async def upload_files(files: list[UploadFile] = File(...)):
             shutil.copyfileobj(file.file, f)
 
         # 2. Load text
-        text = load_document(file_path)
+        Blocks = load_document(file_path)
 
         # 3. Chunk text
-        chunks = chunk_text(text)
+        chunks = chunk_text(Blocks)
 
         all_chunks.extend(chunks)
 
     # 4. Generate embeddings
-    embeddings = embedding_text(all_chunks)
+    texts = [chunk["text"] for chunk in all_chunks]
+    embeddings = embedding_text(texts)
 
     # 5. Store in Pinecone
     upsert_chunks(session_id, all_chunks, embeddings)
 
     return {
-        "status": "success",
-        "session_id": session_id,
-        "chunks_stored": len(all_chunks),
-        "filename": file.filename
-    }
+    "status": "success",
+    "session_id": session_id,
+    "files_processed": [file.filename for file in files],
+    "chunks_stored": len(all_chunks)
+}

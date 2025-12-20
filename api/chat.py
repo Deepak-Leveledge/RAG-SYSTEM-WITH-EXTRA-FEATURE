@@ -18,7 +18,7 @@ async def chat(payload: dict):
 
     try:
         answer = ask_rag(question=question, session_id=session_id)
-        return {"answer": answer}
+        return answer
 
     except Exception as e:
         raise HTTPException(
