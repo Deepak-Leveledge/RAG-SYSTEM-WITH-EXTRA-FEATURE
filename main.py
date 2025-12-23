@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from dotenv import load_dotenv
-from api import upload, chat
+from api import upload, chat ,summary
 
 
 load_dotenv()
@@ -19,5 +19,7 @@ async def read_root():
 
 app.include_router(upload.router, prefix="/upload")
 app.include_router(chat.router, prefix="/api")
+app.include_router(summary.router, prefix="/api")
+
 
 

@@ -55,6 +55,30 @@ if st.button("Upload"):
             else:
                 st.error("Upload failed")
 
+
+# ================= DOCUMENT SUMMARY =================
+st.divider()
+st.subheader("📑 Document Summary")
+
+if st.session_state.session_id is None:
+    st.info("Upload documents to generate summary")
+else:
+    if st.button("Generate Summary"):
+        with st.spinner("Generating document summary..."):
+            response = requests.post(
+                f"{BACKEND_URL}/api/summary",
+                json={"session_id": st.session_state.session_id}
+            )
+
+            if response.status_code == 200:
+                data = response.json()
+
+                st.markdown("### 📝 Summary")
+                st.write(data.get("summary", "No summary available"))
+            else:
+                st.error("Failed to generate summary")
+
+
 # ================= CHAT SECTION =================
 st.divider()
 st.subheader("Chat")
@@ -87,7 +111,9 @@ else:
                       
                     if data.get("sources"):
                        st.markdown("### 📄 Sources")
-                    for src in data["sources"]:
-                       st.write("•", src)
+                       for src in data["sources"]:
+                         st.write("•", src)
                 else:
                     st.error("Error getting answer")
+
+

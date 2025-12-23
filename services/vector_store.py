@@ -102,3 +102,32 @@ def query_chunks(
         )
 
     return chunks
+
+
+
+def get_all_chunk_for_summary(session_id: str,  limit :int =100 ) -> list[Dict]:
+    """
+    Fetch all chunks for a session (used for document summary).
+    """
+
+    result = index.query(
+        vector=[0.0] * DIMENSION,  # dummy vector
+        top_k=limit,
+        include_metadata=True,
+        filter={"session_id": session_id},
+    )
+
+    matches = result.get("matches", [])
+
+    chunks= []
+    for m in matches:
+        meta = m.get("metadata", {})
+        chunks.append(
+            {
+                "text": meta.get("text", ""),
+                "source": meta.get("source", ""),
+                "page": meta.get("page", None),
+            }
+        )
+
+    return chunks

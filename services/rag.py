@@ -4,7 +4,7 @@ import google.generativeai as genai
 from typing import List, Dict
 
 from services.embeddings import embedding_query
-from services.vector_store import query_chunks
+from services.vector_store import query_chunks,get_all_chunk_for_summary
 from services.chat_memory import get_history, add_user_and_assistant_message
 
 load_dotenv()
@@ -96,6 +96,8 @@ def ask_rag(question: str, session_id: str) -> Dict:
         top_k=5
     )
 
+    
+
     if not chunks:
         answer = "I don't know based on the provided documents."
         add_user_and_assistant_message(session_id, question, answer)
@@ -127,3 +129,65 @@ def ask_rag(question: str, session_id: str) -> Dict:
         "sources": sources
     }
 
+
+
+def build_summary_prompt(chunks:list[Dict])-> str:
+    """
+    Build prompt for document summary.
+    """
+
+    texts = [
+        c["text"].replace("\n", " ").strip()
+        for c in chunks
+        if c.get("text")
+    ]
+
+
+    # limit context size (VERY IMPORTANT)
+    texts = texts[:20]
+
+    content = "\n\n".join(texts)
+
+    prompt = f"""
+You are an AI assistant.
+
+Summarize the following documents in a clear and structured way.
+Focus on:
+- Purpose
+- Key features
+- Processes
+- Policies
+- Important points
+
+Content:
+{content}
+
+Summary:
+"""
+    return prompt.strip()
+
+
+
+def summarize_documents(session_id: str) -> dict:
+    """
+    Generate a high-level summary of all uploaded documents.
+    """
+
+    # 1️⃣ Fetch all chunks
+    chunks = get_all_chunk_for_summary(session_id=session_id, limit=50)
+
+    if not chunks:
+        return {
+            "summary": "No documents found to summarize."
+        }
+
+    # 2️⃣ Build summary prompt
+    prompt = build_summary_prompt(chunks)
+
+    # 3️⃣ Call Gemini
+    response = model.generate_content(prompt)
+    summary = response.text.strip()
+
+    return {
+        "summary": summary
+    }
