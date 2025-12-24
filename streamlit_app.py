@@ -13,6 +13,8 @@ st.set_page_config(
 if "session_id" not in st.session_state:
     st.session_state.session_id = None
 
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 # ================= UI HEADER =================
 st.title("📄 AI Document Chat")
 st.write("Upload documents and ask questions using RAG")
@@ -79,41 +81,103 @@ else:
                 st.error("Failed to generate summary")
 
 
+# # ================= CHAT SECTION =================
+# st.divider()
+# st.subheader("Chat")
+
+# # Friendly helper text
+# if st.session_state.session_id is None:
+#     st.info("You can ask general questions. Upload documents for document-based answers.")
+
+# question = st.text_input("Ask anything (general or document-based)")
+
+# if st.button("Ask"):
+#     if not question.strip():
+#         st.warning("Please enter a question")
+#     else:
+#                 payload = {
+#                     "session_id": st.session_state.session_id,
+#                     "question": question
+#                 }
+
+#                 response = requests.post(
+#                     f"{BACKEND_URL}/api/chat",
+#                     json=payload
+#                 )
+
+#                 if response.status_code == 200:
+#                     data = response.json()
+
+#                     st.markdown("### 🤖 Answer")
+#                     st.write(data["answer"])
+                      
+#                     if data.get("sources"):
+#                        st.markdown("### 📄 Sources")
+#                        for src in data["sources"]:
+#                          st.write("•", src)
+#                 else:
+#                     st.error("Error getting answer")
+
+
+
+
 # ================= CHAT SECTION =================
 st.divider()
-st.subheader("Chat")
+st.subheader("💬 Chat")
 
+# Helper text
 if st.session_state.session_id is None:
-    st.info("Upload documents first to start chatting")
-else:
-    question = st.text_input("Ask a question from your documents")
+    st.info("You can ask general questions. Upload documents for document-based answers.")
 
-    if st.button("Ask"):
-        if not question.strip():
-            st.warning("Please enter a question")
+# 🔁 Display chat history
+for msg in st.session_state.messages:
+    if msg["role"] == "user":
+        st.markdown(f"**🧑 You:** {msg['content']}")
+    else:
+        st.markdown(f"**🤖 AI:** {msg['content']}")
+
+# 🔽 Input always at bottom (FORM FIX)
+with st.form(key="chat_form", clear_on_submit=True):
+    question = st.text_input("Ask anything (general or document-based)")
+    submitted = st.form_submit_button("Ask")
+
+if submitted:
+    if not question.strip():
+        st.warning("Please enter a question")
+    else:
+        # 1️⃣ Add user message to history
+        st.session_state.messages.append({
+            "role": "user",
+            "content": question
+        })
+
+        payload = {
+            "session_id": st.session_state.session_id,
+            "question": question
+        }
+
+        with st.spinner("Thinking..."):
+            response = requests.post(
+                f"{BACKEND_URL}/api/chat",
+                json=payload
+            )
+
+        if response.status_code == 200:
+            data = response.json()
+
+            answer = data.get("answer", "")
+
+            # 2️⃣ Add AI response to history
+            st.session_state.messages.append({
+                "role": "assistant",
+                "content": answer
+            })
+
+            # 3️⃣ Clear input
+            st.session_state.chat_input = ""
+
+            # 4️⃣ Rerun to show updated chat
+            st.rerun()
+
         else:
-            with st.spinner("Thinking..."):
-                payload = {
-                    "session_id": st.session_state.session_id,
-                    "question": question
-                }
-
-                response = requests.post(
-                    f"{BACKEND_URL}/api/chat",
-                    json=payload
-                )
-
-                if response.status_code == 200:
-                    data = response.json()
-
-                    st.markdown("### 🤖 Answer")
-                    st.write(data["answer"])
-                      
-                    if data.get("sources"):
-                       st.markdown("### 📄 Sources")
-                       for src in data["sources"]:
-                         st.write("•", src)
-                else:
-                    st.error("Error getting answer")
-
-
+            st.error("Error getting response from AI")
