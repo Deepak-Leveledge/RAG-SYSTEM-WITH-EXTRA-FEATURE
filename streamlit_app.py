@@ -122,6 +122,70 @@ else:
 
 
 # ================= CHAT SECTION =================
+# st.divider()
+# st.subheader("💬 Chat")
+
+# # Helper text
+# if st.session_state.session_id is None:
+#     st.info("You can ask general questions. Upload documents for document-based answers.")
+
+# # 🔁 Display chat history
+# for msg in st.session_state.messages:
+#     if msg["role"] == "user":
+#         st.markdown(f"**🧑 You:** {msg['content']}")
+#     else:
+#         st.markdown(f"**🤖 AI:** {msg['content']}")
+
+# # 🔽 Input always at bottom (FORM FIX)
+# with st.form(key="chat_form", clear_on_submit=True):
+#     question = st.text_input("Ask anything (general or document-based)")
+#     submitted = st.form_submit_button("Ask")
+
+# if submitted:
+#     if not question.strip():
+#         st.warning("Please enter a question")
+#     else:
+#         # 1️⃣ Add user message to history
+#         st.session_state.messages.append({
+#             "role": "user",
+#             "content": question
+#         })
+
+#         payload = {
+#             "session_id": st.session_state.session_id,
+#             "question": question
+#         }
+
+#         with st.spinner("Thinking..."):
+#             response = requests.post(
+#                 f"{BACKEND_URL}/api/chat",
+#                 json=payload
+#             )
+
+#         if response.status_code == 200:
+#             data = response.json()
+
+#             answer = data.get("answer", "")
+
+#             # 2️⃣ Add AI response to history
+#             st.session_state.messages.append({
+#                 "role": "assistant",
+#                 "content": answer
+#             })
+
+#             # 3️⃣ Clear input
+#             st.session_state.chat_input = ""
+
+#             # 4️⃣ Rerun to show updated chat
+#             st.rerun()
+
+#         else:
+#             st.error("Error getting response from AI")
+
+
+
+
+# ================= CHAT SECTION =================
 st.divider()
 st.subheader("💬 Chat")
 
@@ -136,7 +200,7 @@ for msg in st.session_state.messages:
     else:
         st.markdown(f"**🤖 AI:** {msg['content']}")
 
-# 🔽 Input always at bottom (FORM FIX)
+# 🔽 Input always at bottom
 with st.form(key="chat_form", clear_on_submit=True):
     question = st.text_input("Ask anything (general or document-based)")
     submitted = st.form_submit_button("Ask")
@@ -145,7 +209,7 @@ if submitted:
     if not question.strip():
         st.warning("Please enter a question")
     else:
-        # 1️⃣ Add user message to history
+        # 1️⃣ Add user message
         st.session_state.messages.append({
             "role": "user",
             "content": question
@@ -167,17 +231,13 @@ if submitted:
 
             answer = data.get("answer", "")
 
-            # 2️⃣ Add AI response to history
+            # 2️⃣ Add AI message
             st.session_state.messages.append({
                 "role": "assistant",
                 "content": answer
             })
 
-            # 3️⃣ Clear input
-            st.session_state.chat_input = ""
-
-            # 4️⃣ Rerun to show updated chat
+            # 3️⃣ Refresh UI
             st.rerun()
-
         else:
             st.error("Error getting response from AI")

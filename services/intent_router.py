@@ -11,16 +11,36 @@ model = genai.GenerativeModel("gemini-3-pro-preview")
 
 def detect_intent(question: str) -> str:
     """
-    Detect intent: rag | general
+    Detect intent: rag | general | tool
     """
 
     prompt = f"""
 Classify the user's intent into ONE category:
 
-- rag: question requires uploaded documents or PDFs
-- general: general knowledge or conversation
+- rag: the question requires information from uploaded documents or PDFs
+- tool: the question requires web search, latest information, current events, news, or real-time data
+- general: general knowledge, explanations, or conversational questions that do NOT require latest information
 
-Reply with ONLY one word: rag or general.
+If the question asks for latest, current, today, news, or recent events,
+you MUST choose "tool"
+
+Examples:
+Q: What is machine learning?
+A: general
+
+Q: What does page 14 say?
+A: rag
+
+Q: Latest news about OpenAI
+A: tool
+
+Q: Who is the current CEO of Google?
+A: tool
+
+Q: Explain transformers
+A: general
+
+Reply with ONLY one word: rag, tool, or general.
 
 Question:
 {question}
@@ -33,6 +53,6 @@ Answer:
         intent = response.text.strip().lower()
         print("Detected intent:", intent)
 
-        return intent if intent in ["rag", "general"] else "general"
+        return intent if intent in ["rag", "general", "tool"] else "general"
     except Exception:
         return "general"
