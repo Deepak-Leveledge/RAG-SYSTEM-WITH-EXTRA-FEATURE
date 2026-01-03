@@ -233,7 +233,9 @@ import streamlit as st
 import requests
 
 # ================= CONFIG =================
-BACKEND_URL = "http://127.0.0.1:8000"
+# BACKEND_URL = "http://127.0.0.1:8000"
+BACKEND_URL = "https://rag-system-with-extra-feature.onrender.com/"
+
 
 st.set_page_config(
     page_title="AI Document Chat",
