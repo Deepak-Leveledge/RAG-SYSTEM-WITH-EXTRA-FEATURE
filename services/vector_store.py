@@ -75,7 +75,7 @@ def upsert_chunks(
 def query_chunks(
     session_id: str,
     query_vector: list[float],
-    top_k: int = 8,
+    top_k: int = 3,
 ) -> list[Dict]:
     """
     Query relevant chunks from Pinecone.
